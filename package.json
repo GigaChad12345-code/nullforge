@@ -1,0 +1,13 @@
+{
+  "name": "nullforge",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@titaniumnetwork-dev/ultraviolet": "latest",
+    "bare-server-node": "latest",
+    "express": "latest"
+  }
+}
