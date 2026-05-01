@@ -18,16 +18,6 @@
       <li><a href="#apps">Apps</a></li>
       <li><a href="#games">Games</a></li>
       <li><a href="#tools">Tools</a></li>
-      <!-- SEARCH BAR -->
-      <li class="search-container">
-        <input 
-          type="text" 
-          id="searchInput" 
-          class="search-input" 
-          placeholder="Search or paste URL..."
-        >
-        <div id="searchResults" class="search-results"></div>
-      </li>
     </ul>
   </nav>
 
@@ -36,6 +26,20 @@
     <div class="hero-content">
       <h1 class="logo">NullForge</h1>
       <p class="subtitle">Forging the Future</p>
+
+      <!-- Search Bar Below Logo -->
+      <div class="search-wrapper">
+        <div class="search-container">
+          <input 
+            type="text" 
+            id="searchInput" 
+            class="search-input" 
+            placeholder="Search the web or paste URL..."
+          >
+          <button id="searchBtn" class="search-btn">⌕</button>
+          <div id="searchResults" class="search-results"></div>
+        </div>
+      </div>
 
       <div class="hero-buttons">
         <a class="hero-btn" href="#apps">Apps</a>
@@ -92,6 +96,19 @@
       </div>
     </div>
   </section>
+
+  <!-- BROWSER MODAL -->
+  <div id="browserModal" class="browser-modal">
+    <div class="browser-window">
+      <div class="browser-header">
+        <button id="closeModal" class="close-btn">✕</button>
+        <input type="text" id="browserUrl" class="browser-url-bar" placeholder="Enter URL...">
+        <button id="browserReload" class="reload-btn">↻</button>
+      </div>
+      <iframe id="browserFrame" class="browser-frame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      <div class="browser-loading" id="browserLoading">Loading...</div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
