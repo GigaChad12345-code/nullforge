@@ -1,15 +1,19 @@
 const express = require("express");
-const path = require("path");
-const { createServer } = require("@mercuryworkshop/wisp-server");
+const { WispServer } = require("@mercuryworkshop/wisp-js");
 
 const app = express();
-const wisp = createServer();
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.use("/wisp/", wisp.app);
-
 const PORT = process.env.PORT || 8080;
+
+// Serve your static files
+app.use(express.static("public"));
+
+// Create Wisp server
+const wispServer = new WispServer({
+  server: app, // attach to express
+  path: "/wisp" // your wisp endpoint
+});
+
+// Start server
 app.listen(PORT, () => {
-  console.log("Wisp proxy running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
