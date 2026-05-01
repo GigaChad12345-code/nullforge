@@ -10,18 +10,20 @@ const PORT = process.env.PORT || 8080;
 const corrosion = new Corrosion({
   prefix: "/service/",
   codec: "xor",
-  ws: true
+  ws: true,
+  origin: true,
+  bundle: false
 });
 
 // Serve static files from /public
 app.use(express.static("public"));
 
-// Corrosion request handler
+// Corrosion request handler - MUST be last
 app.use((req, res) => {
   corrosion.request(req, res);
 });
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`Corrosion proxy running on port ${PORT}`);
+  console.log(`NullForge proxy running on port ${PORT}`);
 });
