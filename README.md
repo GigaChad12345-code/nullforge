@@ -1,1 +1,1 @@
-force nixpacks rebuild
+force rebuild
