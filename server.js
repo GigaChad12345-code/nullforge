@@ -6,32 +6,37 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 8080;
 
-// Create Corrosion instance
+// Create Corrosion instance with proper settings
 const corrosion = new Corrosion({
   prefix: "/service/",
   codec: "xor",
   ws: true,
-  logLevel: 0
+  logLevel: 0,
+  botCheck: false,
+  requestInterceptor: false,
+  responseInterceptor: false,
+  // These are important:
+  origin: true,
+  bundle: false
 });
 
-// Serve static files from /public ONLY for actual files
-app.use(express.static("public", {
-  // Don't serve /service paths through static
-  skip: (req) => req.path.startsWith("/service")
-}));
+// Serve static files from /public
+app.use(express.static("public"));
 
-// IMPORTANT: Corrosion handler MUST come BEFORE the catch-all
-// This handles all /service/* requests
-app.all("/service/*", (req, res) => {
+// Make sure Corrosion routes are registered before static
+app.use("/service", (req, res) => {
   corrosion.request(req, res);
 });
 
-// Fallback for index.html
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+// Alternative catch-all for any other /service routes
+app.use((req, res) => {
+  if (req.path.startsWith("/service")) {
+    corrosion.request(req, res);
+  }
 });
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`NullForge proxy running on http://localhost:${PORT}`);
+  console.log(`NullForge proxy running on port ${PORT}`);
+  console.log(`Visit: http://localhost:${PORT}`);
 });
