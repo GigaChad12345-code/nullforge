@@ -166,7 +166,7 @@ function searchGoogle(query) {
   searchResults.classList.remove("active");
 }
 
-// Load URL in browser modal using Corrosion proxy
+// Load URL in browser modal - SIMPLE APPROACH
 function loadInBrowser(url, displayUrl) {
   browserModal.classList.add("active");
   browserUrl.value = displayUrl || url;
@@ -175,30 +175,24 @@ function loadInBrowser(url, displayUrl) {
   browserLoading.style.display = "flex";
   browserLoading.innerHTML = "Loading...";
   
-  // Fetch through Corrosion proxy
-  const proxyPath = "/service/" + url;
+  // Build proxy URL - simple and direct
+  const proxyUrl = "/service/" + url;
   
-  fetch(proxyPath)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("Network response failed");
-      }
-      return response.text();
-    })
-    .then(html => {
-      // Write HTML directly to iframe
-      browserFrame.srcdoc = html;
-      browserLoading.style.display = "none";
-    })
-    .catch(error => {
-      console.error("Load error:", error);
-      browserLoading.innerHTML = "⚠️ Failed to load. Make sure Corrosion server is running.";
-      browserFrame.srcdoc = `<div style="color: red; padding: 20px; font-family: monospace;">
-        Error: ${error.message}<br><br>
-        URL: ${proxyPath}<br><br>
-        Make sure your Corrosion server is configured correctly.
-      </div>`;
-    });
+  console.log("Loading proxy URL:", proxyUrl);
+  
+  // Set iframe src directly to the proxy URL
+  browserFrame.src = proxyUrl;
+  
+  // Wait for iframe to load
+  browserFrame.onload = () => {
+    browserLoading.style.display = "none";
+    console.log("Iframe loaded successfully");
+  };
+  
+  browserFrame.onerror = () => {
+    browserLoading.innerHTML = "⚠️ Failed to load page";
+    console.error("Iframe failed to load");
+  };
 }
 
 // Handle Enter key
@@ -228,7 +222,7 @@ searchBtn.addEventListener("click", function () {
 // Close browser modal
 closeModal.addEventListener("click", function () {
   browserModal.classList.remove("active");
-  browserFrame.srcdoc = "";
+  browserFrame.src = "";
   browserLoading.style.display = "none";
 });
 
@@ -251,7 +245,7 @@ browserUrl.addEventListener("keypress", function (event) {
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     browserModal.classList.remove("active");
-    browserFrame.srcdoc = "";
+    browserFrame.src = "";
     browserLoading.style.display = "none";
   }
 });
