@@ -69,16 +69,11 @@ const searchData = [
   { title: "Tools Section", type: "internal", url: "#tools" },
 ];
 
-// Format URL for proxy - FIXED VERSION
+// Format URL for proxy
 function formatUrl(input) {
   input = input.trim();
 
-  // Remove /service/ if already there
-  if (input.startsWith("/service/")) {
-    input = input.substring(9);
-  }
-
-  // If already has protocol, return with /service/ prefix
+  // If already has protocol, return as-is
   if (input.includes("://")) {
     return input;
   }
@@ -154,35 +149,50 @@ function navigateTo(url) {
   window.location.hash = url;
 }
 
-// Browse URL in modal - FIXED
+// Browse URL in modal
 function browseTo(urlInput) {
   const formattedUrl = formatUrl(urlInput);
-  const proxyUrl = "/service/" + formattedUrl;
-  loadInBrowser(proxyUrl, urlInput);
+  loadInBrowser(formattedUrl, urlInput);
   searchInput.value = "";
   searchResults.classList.remove("active");
 }
 
-// Search on Google - FIXED
+// Search on Google
 function searchGoogle(query) {
-  const googleUrl = "/service/https://www.google.com/search?q=" + encodeURIComponent(query);
+  const googleUrl = "https://www.google.com/search?q=" + encodeURIComponent(query);
   loadInBrowser(googleUrl, "Google: " + query);
   searchInput.value = "";
   searchResults.classList.remove("active");
 }
 
-// Load URL in browser modal - FIXED
+// Build proxy URL properly
+function buildProxyUrl(targetUrl) {
+  // Get current domain
+  const currentDomain = window.location.origin;
+  
+  // Encode the target URL
+  const encoded = btoa(targetUrl); // Base64 encode
+  
+  // Return proxy URL
+  return currentDomain + "/service/" + targetUrl;
+}
+
+// Load URL in browser modal
 function loadInBrowser(url, displayUrl) {
   browserModal.classList.add("active");
   browserUrl.value = displayUrl || url;
   
   // Clear previous iframe
-  browserFrame.src = "";
+  browserFrame.innerHTML = "";
   browserLoading.style.display = "flex";
+  browserLoading.innerHTML = "Loading...";
   
-  // Set new source
+  // Build proper proxy URL
+  const proxyUrl = buildProxyUrl(url);
+  
+  // Use a timeout to ensure loading indicator shows
   setTimeout(() => {
-    browserFrame.src = url;
+    browserFrame.src = proxyUrl;
   }, 100);
   
   // Hide loading indicator when iframe loads
@@ -191,7 +201,8 @@ function loadInBrowser(url, displayUrl) {
   };
   
   browserFrame.onerror = () => {
-    browserLoading.innerHTML = "⚠️ Failed to load";
+    browserLoading.innerHTML = "⚠️ Failed to load. Check your Corrosion server.";
+    console.error("iframe error loading:", proxyUrl);
   };
 }
 
@@ -228,17 +239,24 @@ closeModal.addEventListener("click", function () {
 
 // Reload page in browser
 browserReload.addEventListener("click", function () {
-  browserFrame.src = browserFrame.src;
+  const currentSrc = browserFrame.src;
+  browserFrame.src = "";
   browserLoading.style.display = "flex";
+  setTimeout(() => {
+    browserFrame.src = currentSrc;
+  }, 100);
 });
 
 // Load URL from address bar
 browserUrl.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     const url = formatUrl(this.value);
-    const proxyUrl = "/service/" + url;
-    browserFrame.src = proxyUrl;
+    const proxyUrl = buildProxyUrl(url);
+    browserFrame.src = "";
     browserLoading.style.display = "flex";
+    setTimeout(() => {
+      browserFrame.src = proxyUrl;
+    }, 100);
   }
 });
 
