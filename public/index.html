@@ -105,7 +105,9 @@
         <input type="text" id="browserUrl" class="browser-url-bar" placeholder="Enter URL...">
         <button id="browserReload" class="reload-btn">↻</button>
       </div>
-      <iframe id="browserFrame" class="browser-frame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      <div id="browserContent" class="browser-content">
+        <iframe id="browserFrame" class="browser-frame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      </div>
       <div class="browser-loading" id="browserLoading">Loading...</div>
     </div>
   </div>
