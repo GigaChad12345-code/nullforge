@@ -1,13 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Wisp Proxy</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NullForge</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Wisp Proxy</h1>
-  <input id="url" placeholder="Enter URL">
-  <button onclick="go()">Go</button>
+
+  <!-- Animated Cyber Grid Background -->
+  <canvas id="grid"></canvas>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <ul>
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#apps">Apps</a></li>
+      <li><a href="#games">Games</a></li>
+      <li><a href="#tools">Tools</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <h1 class="logo">NullForge</h1>
+      <p class="subtitle">Forging the Future</p>
+
+      <div class="hero-buttons">
+        <a class="hero-btn" href="#apps">Apps</a>
+        <a class="hero-btn" href="#games">Games</a>
+        <a class="hero-btn" href="#tools">Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD GRID -->
+  <section id="apps" class="section">
+    <h2 class="section-title">Apps</h2>
+    <div class="card-grid">
+      <div class="card">
+        <img src="icons/app1.png" class="card-icon">
+        <h3>App One</h3>
+      </div>
+
+      <div class="card">
+        <img src="icons/app2.png" class="card-icon">
+        <h3>App Two</h3>
+      </div>
+    </div>
+  </section>
 
   <script src="script.js"></script>
 </body>
