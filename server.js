@@ -1,6 +1,6 @@
 const express = require("express");
 const http = require("http");
-const Corrosion = require("@titaniumnetwork-dev/corrosion");
+const Corrosion = require("corrosion");
 
 const app = express();
 const server = http.createServer(app);
