@@ -59,6 +59,7 @@ const browserUrl = document.getElementById("browserUrl");
 const closeModal = document.getElementById("closeModal");
 const browserReload = document.getElementById("browserReload");
 const browserLoading = document.getElementById("browserLoading");
+const browserContent = document.getElementById("browserContent");
 
 // Sample search suggestions
 const searchData = [
@@ -68,22 +69,27 @@ const searchData = [
   { title: "Tools Section", type: "internal", url: "#tools" },
 ];
 
-// Format URL for proxy
+// Format URL for proxy - FIXED VERSION
 function formatUrl(input) {
   input = input.trim();
 
-  // If already has protocol, use as-is
+  // Remove /service/ if already there
+  if (input.startsWith("/service/")) {
+    input = input.substring(9);
+  }
+
+  // If already has protocol, return with /service/ prefix
   if (input.includes("://")) {
-    return "/service/" + input;
+    return input;
   }
 
   // If looks like a domain
   if (input.includes(".")) {
-    return "/service/https://" + input;
+    return "https://" + input;
   }
 
   // Fallback
-  return "/service/https://" + input;
+  return "https://" + input;
 }
 
 // Validate if string is URL-like
@@ -148,32 +154,44 @@ function navigateTo(url) {
   window.location.hash = url;
 }
 
-// Browse URL in modal
+// Browse URL in modal - FIXED
 function browseTo(urlInput) {
-  const proxyUrl = formatUrl(urlInput);
-  loadInBrowser(proxyUrl);
+  const formattedUrl = formatUrl(urlInput);
+  const proxyUrl = "/service/" + formattedUrl;
+  loadInBrowser(proxyUrl, urlInput);
   searchInput.value = "";
   searchResults.classList.remove("active");
 }
 
-// Search on Google
+// Search on Google - FIXED
 function searchGoogle(query) {
-  const googleUrl = `/service/https://www.google.com/search?q=${encodeURIComponent(query)}`;
-  loadInBrowser(googleUrl);
+  const googleUrl = "/service/https://www.google.com/search?q=" + encodeURIComponent(query);
+  loadInBrowser(googleUrl, "Google: " + query);
   searchInput.value = "";
   searchResults.classList.remove("active");
 }
 
-// Load URL in browser modal
-function loadInBrowser(url) {
+// Load URL in browser modal - FIXED
+function loadInBrowser(url, displayUrl) {
   browserModal.classList.add("active");
-  browserUrl.value = url;
-  browserFrame.src = url;
+  browserUrl.value = displayUrl || url;
+  
+  // Clear previous iframe
+  browserFrame.src = "";
   browserLoading.style.display = "flex";
+  
+  // Set new source
+  setTimeout(() => {
+    browserFrame.src = url;
+  }, 100);
   
   // Hide loading indicator when iframe loads
   browserFrame.onload = () => {
     browserLoading.style.display = "none";
+  };
+  
+  browserFrame.onerror = () => {
+    browserLoading.innerHTML = "⚠️ Failed to load";
   };
 }
 
@@ -205,18 +223,21 @@ searchBtn.addEventListener("click", function () {
 closeModal.addEventListener("click", function () {
   browserModal.classList.remove("active");
   browserFrame.src = "";
+  browserLoading.style.display = "none";
 });
 
 // Reload page in browser
 browserReload.addEventListener("click", function () {
   browserFrame.src = browserFrame.src;
+  browserLoading.style.display = "flex";
 });
 
 // Load URL from address bar
 browserUrl.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     const url = formatUrl(this.value);
-    browserFrame.src = url;
+    const proxyUrl = "/service/" + url;
+    browserFrame.src = proxyUrl;
     browserLoading.style.display = "flex";
   }
 });
@@ -226,6 +247,7 @@ document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     browserModal.classList.remove("active");
     browserFrame.src = "";
+    browserLoading.style.display = "none";
   }
 });
 
