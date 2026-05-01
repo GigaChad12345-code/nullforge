@@ -1,13 +1,12 @@
 {
-  "name": "nullforge",
+  "name": "wisp-proxy",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "@titaniumnetwork-dev/ultraviolet": "latest",
-    "bare-server-node": "latest",
+    "@mercuryworkshop/wisp-server": "latest",
     "express": "latest"
   }
 }
