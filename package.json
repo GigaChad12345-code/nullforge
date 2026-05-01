@@ -6,7 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@titaniumnetwork-dev/corrosion": "latest",
+    "corrosion": "latest",
     "express": "latest"
   }
 }
