@@ -1,22 +1,27 @@
 const express = require("express");
 const http = require("http");
-const { wispServer } = require("@mercuryworkshop/wisp-js");
+const Corrosion = require("@titaniumnetwork-dev/corrosion");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 8080;
+
+// Create Corrosion instance
+const corrosion = new Corrosion({
+  prefix: "/service/",
+  codec: "xor",
+  ws: true
+});
 
 // Serve static files from /public
 app.use(express.static("public"));
 
-// Create the HTTP server
-const server = http.createServer(app);
-
-// Attach Wisp to the HTTP server
-wispServer(server, {
-  path: "/wisp"
+// Corrosion request handler
+app.use((req, res) => {
+  corrosion.request(req, res);
 });
 
-// Start the server
+// Start server
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Corrosion proxy running on port ${PORT}`);
 });
