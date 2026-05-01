@@ -8,7 +8,8 @@ function resize() {
 resize();
 window.addEventListener("resize", resize);
 
-let offset = 0;
+// ===== STATIC GRID WITH WAVE EFFECT =====
+let time = 0;
 
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -17,19 +18,28 @@ function drawGrid() {
   ctx.lineWidth = 1;
 
   const gridSize = 40;
-  offset += 0.3;
+  time += 0.02;
 
+  // Vertical lines with wave effect
   for (let x = -gridSize; x < canvas.width + gridSize; x += gridSize) {
     ctx.beginPath();
-    ctx.moveTo(x + offset, 0);
-    ctx.lineTo(x + offset, canvas.height);
+    for (let y = 0; y < canvas.height; y += 5) {
+      const wave = Math.sin((y / 50) + time) * 3;
+      const xPos = x + wave;
+      if (y === 0) {
+        ctx.moveTo(xPos, y);
+      } else {
+        ctx.lineTo(xPos, y);
+      }
+    }
     ctx.stroke();
   }
 
+  // Horizontal lines (static)
   for (let y = -gridSize; y < canvas.height + gridSize; y += gridSize) {
     ctx.beginPath();
-    ctx.moveTo(0, y + offset);
-    ctx.lineTo(canvas.width, y + offset);
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
     ctx.stroke();
   }
 
@@ -38,51 +48,50 @@ function drawGrid() {
 
 drawGrid();
 
-// ===== SEARCH BAR FUNCTIONALITY =====
+// ===== SEARCH BAR & BROWSER FUNCTIONALITY =====
 
 const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
 const searchResults = document.getElementById("searchResults");
+const browserModal = document.getElementById("browserModal");
+const browserFrame = document.getElementById("browserFrame");
+const browserUrl = document.getElementById("browserUrl");
+const closeModal = document.getElementById("closeModal");
+const browserReload = document.getElementById("browserReload");
+const browserLoading = document.getElementById("browserLoading");
 
-// Sample search data - customize with your own content
+// Sample search suggestions
 const searchData = [
-  { title: "Home", url: "#hero" },
-  { title: "Apps Section", url: "#apps" },
-  { title: "Games Section", url: "#games" },
-  { title: "Tools Section", url: "#tools" },
-  { title: "App One", url: "#apps" },
-  { title: "App Two", url: "#apps" },
-  { title: "Game One", url: "#games" },
-  { title: "Game Two", url: "#games" },
-  { title: "Tool One", url: "#tools" },
-  { title: "Tool Two", url: "#tools" },
+  { title: "Home", type: "internal", url: "#hero" },
+  { title: "Apps Section", type: "internal", url: "#apps" },
+  { title: "Games Section", type: "internal", url: "#games" },
+  { title: "Tools Section", type: "internal", url: "#tools" },
 ];
 
-// Detect if input is a URL
-function isValidUrl(string) {
-  try {
-    new URL(string);
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
-// Format URL for proxy if needed
+// Format URL for proxy
 function formatUrl(input) {
-  // If it's already a valid URL, use it directly
-  if (isValidUrl(input)) {
+  input = input.trim();
+
+  // If already has protocol, use as-is
+  if (input.includes("://")) {
     return "/service/" + input;
   }
 
-  // If it doesn't have a protocol, add https://
-  if (!input.includes("://")) {
+  // If looks like a domain
+  if (input.includes(".")) {
     return "/service/https://" + input;
   }
 
-  return "/service/" + input;
+  // Fallback
+  return "/service/https://" + input;
 }
 
-// Search functionality
+// Validate if string is URL-like
+function isUrlLike(string) {
+  return string.includes(".") || string.includes("://") || string.includes("/");
+}
+
+// Show search results
 searchInput.addEventListener("input", function () {
   const query = this.value.toLowerCase().trim();
 
@@ -92,73 +101,131 @@ searchInput.addEventListener("input", function () {
     return;
   }
 
-  // Filter search results
+  let resultsHtml = "";
+
+  // Filter internal search items
   const filtered = searchData.filter(item =>
     item.title.toLowerCase().includes(query)
   );
 
-  // Build results HTML
-  if (filtered.length > 0 || isValidUrl(query) || query.includes(".")) {
-    let resultsHtml = "";
+  filtered.forEach(item => {
+    resultsHtml += `
+      <div class="search-result-item" onclick="navigateTo('${item.url}')">
+        <span class="result-type">${item.type === 'internal' ? '📍' : '🌐'}</span>
+        ${item.title}
+      </div>
+    `;
+  });
 
-    // Show matching items first
-    filtered.forEach(item => {
-      resultsHtml += `
-        <div class="search-result-item" onclick="navigateTo('${item.url}')">
-          ${item.title}
-        </div>
-      `;
-    });
-
-    // If query looks like a URL, add option to browse it
-    if (query.includes(".") || isValidUrl(query)) {
-      const urlToBrowse = formatUrl(query);
-      resultsHtml += `
-        <div class="search-result-item" onclick="browseUrl('${urlToBrowse}')">
-          🌐 Browse: ${query}
-        </div>
-      `;
-    }
-
-    searchResults.innerHTML = resultsHtml;
-    searchResults.classList.add("active");
-  } else {
-    searchResults.innerHTML = '<div class="search-result-item no-results">No results found</div>';
-    searchResults.classList.add("active");
+  // Add "Browse URL" option if input looks like a URL
+  if (isUrlLike(query)) {
+    resultsHtml += `
+      <div class="search-result-item browse-item" onclick="browseTo('${query}')">
+        <span class="result-type">🌐</span>
+        Browse: ${query}
+      </div>
+    `;
   }
+
+  // Add Google search fallback
+  if (!isUrlLike(query)) {
+    resultsHtml += `
+      <div class="search-result-item" onclick="searchGoogle('${query}')">
+        <span class="result-type">🔍</span>
+        Search: "${query}" on Google
+      </div>
+    `;
+  }
+
+  searchResults.innerHTML = resultsHtml;
+  searchResults.classList.add("active");
 });
 
-// Navigate to section
+// Navigate to internal section
 function navigateTo(url) {
   searchInput.value = "";
   searchResults.classList.remove("active");
   window.location.hash = url;
 }
 
-// Browse URL through proxy
-function browseUrl(url) {
+// Browse URL in modal
+function browseTo(urlInput) {
+  const proxyUrl = formatUrl(urlInput);
+  loadInBrowser(proxyUrl);
   searchInput.value = "";
   searchResults.classList.remove("active");
-  window.open(url, "_blank");
 }
 
-// Handle Enter key in search
+// Search on Google
+function searchGoogle(query) {
+  const googleUrl = `/service/https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  loadInBrowser(googleUrl);
+  searchInput.value = "";
+  searchResults.classList.remove("active");
+}
+
+// Load URL in browser modal
+function loadInBrowser(url) {
+  browserModal.classList.add("active");
+  browserUrl.value = url;
+  browserFrame.src = url;
+  browserLoading.style.display = "flex";
+  
+  // Hide loading indicator when iframe loads
+  browserFrame.onload = () => {
+    browserLoading.style.display = "none";
+  };
+}
+
+// Handle Enter key
 searchInput.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     const query = this.value.trim();
 
-    // If it's a URL-like input, browse it
-    if (query.includes(".") || isValidUrl(query)) {
-      browseUrl(formatUrl(query));
-    } else {
-      // Otherwise, search and navigate to first result
-      const filtered = searchData.filter(item =>
-        item.title.toLowerCase().includes(query.toLowerCase())
-      );
-      if (filtered.length > 0) {
-        navigateTo(filtered[0].url);
-      }
+    if (isUrlLike(query)) {
+      browseTo(query);
+    } else if (query.length > 0) {
+      searchGoogle(query);
     }
+  }
+});
+
+// Search button click
+searchBtn.addEventListener("click", function () {
+  const query = searchInput.value.trim();
+
+  if (isUrlLike(query)) {
+    browseTo(query);
+  } else if (query.length > 0) {
+    searchGoogle(query);
+  }
+});
+
+// Close browser modal
+closeModal.addEventListener("click", function () {
+  browserModal.classList.remove("active");
+  browserFrame.src = "";
+});
+
+// Reload page in browser
+browserReload.addEventListener("click", function () {
+  browserFrame.src = browserFrame.src;
+});
+
+// Load URL from address bar
+browserUrl.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    const url = formatUrl(this.value);
+    browserFrame.src = url;
+    browserLoading.style.display = "flex";
+  }
+});
+
+// Close modal on Escape key
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    browserModal.classList.remove("active");
+    browserFrame.src = "";
   }
 });
 
