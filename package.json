@@ -6,7 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@mercuryworkshop/wisp-server": "https://github.com/mercuryworkshop/wisp-server.git",
+    "@mercuryworkshop/wisp-js": "latest",
     "express": "latest"
   }
 }
