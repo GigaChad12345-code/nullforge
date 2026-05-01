@@ -59,7 +59,6 @@ const browserUrl = document.getElementById("browserUrl");
 const closeModal = document.getElementById("closeModal");
 const browserReload = document.getElementById("browserReload");
 const browserLoading = document.getElementById("browserLoading");
-const browserContent = document.getElementById("browserContent");
 
 // Sample search suggestions
 const searchData = [
@@ -68,6 +67,8 @@ const searchData = [
   { title: "Games Section", type: "internal", url: "#games" },
   { title: "Tools Section", type: "internal", url: "#tools" },
 ];
+
+let currentBrowsingUrl = null;
 
 // Format URL for proxy
 function formatUrl(input) {
@@ -165,45 +166,39 @@ function searchGoogle(query) {
   searchResults.classList.remove("active");
 }
 
-// Build proxy URL properly
-function buildProxyUrl(targetUrl) {
-  // Get current domain
-  const currentDomain = window.location.origin;
-  
-  // Encode the target URL
-  const encoded = btoa(targetUrl); // Base64 encode
-  
-  // Return proxy URL
-  return currentDomain + "/service/" + targetUrl;
-}
-
-// Load URL in browser modal
+// Load URL in browser modal using Corrosion proxy
 function loadInBrowser(url, displayUrl) {
   browserModal.classList.add("active");
   browserUrl.value = displayUrl || url;
+  currentBrowsingUrl = url;
   
-  // Clear previous iframe
-  browserFrame.innerHTML = "";
   browserLoading.style.display = "flex";
   browserLoading.innerHTML = "Loading...";
   
-  // Build proper proxy URL
-  const proxyUrl = buildProxyUrl(url);
+  // Fetch through Corrosion proxy
+  const proxyPath = "/service/" + url;
   
-  // Use a timeout to ensure loading indicator shows
-  setTimeout(() => {
-    browserFrame.src = proxyUrl;
-  }, 100);
-  
-  // Hide loading indicator when iframe loads
-  browserFrame.onload = () => {
-    browserLoading.style.display = "none";
-  };
-  
-  browserFrame.onerror = () => {
-    browserLoading.innerHTML = "⚠️ Failed to load. Check your Corrosion server.";
-    console.error("iframe error loading:", proxyUrl);
-  };
+  fetch(proxyPath)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Network response failed");
+      }
+      return response.text();
+    })
+    .then(html => {
+      // Write HTML directly to iframe
+      browserFrame.srcdoc = html;
+      browserLoading.style.display = "none";
+    })
+    .catch(error => {
+      console.error("Load error:", error);
+      browserLoading.innerHTML = "⚠️ Failed to load. Make sure Corrosion server is running.";
+      browserFrame.srcdoc = `<div style="color: red; padding: 20px; font-family: monospace;">
+        Error: ${error.message}<br><br>
+        URL: ${proxyPath}<br><br>
+        Make sure your Corrosion server is configured correctly.
+      </div>`;
+    });
 }
 
 // Handle Enter key
@@ -233,30 +228,22 @@ searchBtn.addEventListener("click", function () {
 // Close browser modal
 closeModal.addEventListener("click", function () {
   browserModal.classList.remove("active");
-  browserFrame.src = "";
+  browserFrame.srcdoc = "";
   browserLoading.style.display = "none";
 });
 
 // Reload page in browser
 browserReload.addEventListener("click", function () {
-  const currentSrc = browserFrame.src;
-  browserFrame.src = "";
-  browserLoading.style.display = "flex";
-  setTimeout(() => {
-    browserFrame.src = currentSrc;
-  }, 100);
+  if (currentBrowsingUrl) {
+    loadInBrowser(currentBrowsingUrl, browserUrl.value);
+  }
 });
 
 // Load URL from address bar
 browserUrl.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     const url = formatUrl(this.value);
-    const proxyUrl = buildProxyUrl(url);
-    browserFrame.src = "";
-    browserLoading.style.display = "flex";
-    setTimeout(() => {
-      browserFrame.src = proxyUrl;
-    }, 100);
+    loadInBrowser(url, this.value);
   }
 });
 
@@ -264,7 +251,7 @@ browserUrl.addEventListener("keypress", function (event) {
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     browserModal.classList.remove("active");
-    browserFrame.src = "";
+    browserFrame.srcdoc = "";
     browserLoading.style.display = "none";
   }
 });
